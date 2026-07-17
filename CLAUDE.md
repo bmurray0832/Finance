@@ -216,6 +216,17 @@ sample-statement.csv  Demo data for trying the import flow.
 5. **Merge-on-restore option** — restore currently replaces all; a "merge"
    mode (dedupe by id) could be offered alongside replace.
 
+### Bigger direction: a Giving module + financial suite
+
+A larger, prioritized idea catalog lives in
+`docs/IDEAS-giving-and-financial-suite.md` (inspired by the StewardFlow
+stewardship/giving platform). Headline expansion is a **Giving area** — a giving
+page, tithe/giving-% goal, funds/pledges, recurring-giving forecast, and a
+local, printable **year-end giving statement** — plus a **subscription/billing
+tracker** built on the existing recurring detector. Every idea reuses current
+modules and stays browser-only/no-backend. Start with the "first slice" section
+in that doc.
+
 _Not planned: currency picker — owner confirmed USD is fine (see Locked
 product decisions)._
 
