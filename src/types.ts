@@ -61,4 +61,10 @@ export interface AppState {
   goals: Goal[]
   /** Saved mappings keyed by a signature of the CSV header row. */
   savedMappings: Record<string, ColumnMapping>
+  /** Manually-entered account balance, used as the starting point for the cash flow forecast. */
+  currentBalance: number
+  /** ISO timestamp of the last time currentBalance was set. Null if never set. */
+  currentBalanceUpdatedAt: string | null
+  /** Keys (from recurring.ts's detectRecurring) the user has hidden from the cash flow forecast. */
+  dismissedRecurring: string[]
 }

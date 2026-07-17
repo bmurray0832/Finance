@@ -11,20 +11,40 @@ const EMPTY_STATE: AppState = {
   debts: [],
   goals: [],
   savedMappings: {},
+  currentBalance: 0,
+  currentBalanceUpdatedAt: null,
+  dismissedRecurring: [],
+}
+
+/**
+ * Fill in any missing fields with defaults. Used both when loading from
+ * localStorage and when restoring an imported backup, so older or
+ * partially-shaped data (e.g. a backup from before currentBalance/
+ * dismissedRecurring existed) never crashes the app.
+ */
+function normalizeState(parsed: Partial<AppState> | null | undefined): AppState {
+  if (!parsed || typeof parsed !== 'object') return EMPTY_STATE
+  return {
+    transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
+    rules: Array.isArray(parsed.rules) ? parsed.rules : DEFAULT_RULES,
+    debts: Array.isArray(parsed.debts) ? parsed.debts : [],
+    goals: Array.isArray(parsed.goals) ? parsed.goals : [],
+    savedMappings:
+      parsed.savedMappings && typeof parsed.savedMappings === 'object'
+        ? parsed.savedMappings
+        : {},
+    currentBalance: typeof parsed.currentBalance === 'number' ? parsed.currentBalance : 0,
+    currentBalanceUpdatedAt:
+      typeof parsed.currentBalanceUpdatedAt === 'string' ? parsed.currentBalanceUpdatedAt : null,
+    dismissedRecurring: Array.isArray(parsed.dismissedRecurring) ? parsed.dismissedRecurring : [],
+  }
 }
 
 function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return EMPTY_STATE
-    const parsed = JSON.parse(raw) as Partial<AppState>
-    return {
-      transactions: parsed.transactions ?? [],
-      rules: parsed.rules ?? DEFAULT_RULES,
-      debts: parsed.debts ?? [],
-      goals: parsed.goals ?? [],
-      savedMappings: parsed.savedMappings ?? {},
-    }
+    return normalizeState(JSON.parse(raw) as Partial<AppState>)
   } catch {
     return EMPTY_STATE
   }
@@ -150,16 +170,35 @@ export const actions = {
 
   // Backup / restore ---------------------------------------------------
   /** Replace the entire app state — used when restoring a JSON backup. */
-  replaceAll(next: AppState) {
-    setState(() => ({
-      transactions: next.transactions ?? [],
-      rules: next.rules ?? [],
-      debts: next.debts ?? [],
-      goals: next.goals ?? [],
-      savedMappings: next.savedMappings ?? {},
+  replaceAll(next: Partial<AppState>) {
+    setState(() => normalizeState(next))
+  },
+
+  // Cash flow ------------------------------------------------------------
+  /** Set the manually-entered account balance the cash flow forecast projects forward from. */
+  setCurrentBalance(amount: number) {
+    setState((prev) => ({
+      ...prev,
+      currentBalance: amount,
+      currentBalanceUpdatedAt: new Date().toISOString(),
+    }))
+  },
+
+  /** Hide (or restore) an auto-detected recurring bill/income from the cash flow forecast. */
+  setRecurringDismissed(key: string, dismissed: boolean) {
+    setState((prev) => ({
+      ...prev,
+      dismissedRecurring: dismissed
+        ? prev.dismissedRecurring.includes(key)
+          ? prev.dismissedRecurring
+          : [...prev.dismissedRecurring, key]
+        : prev.dismissedRecurring.filter((k) => k !== key),
     }))
   },
 }
+
+/** Exported for lib/backup.ts, which normalizes a parsed backup file the same way. */
+export { normalizeState }
 
 /** Convenience hook returning a stable reference to the actions object. */
 export function useActions() {

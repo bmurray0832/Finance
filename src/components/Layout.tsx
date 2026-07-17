@@ -5,6 +5,7 @@ const links = [
   { to: '/transactions', label: 'Transactions', icon: '🧾' },
   { to: '/debts', label: 'Debt Payoff', icon: '💳' },
   { to: '/goals', label: 'Savings Goals', icon: '🎯' },
+  { to: '/cashflow', label: 'Cash Flow', icon: '📈' },
   { to: '/rules', label: 'Category Rules', icon: '🏷️' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ]

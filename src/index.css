@@ -249,6 +249,33 @@ button:disabled {
   color: var(--text);
 }
 
+/* Segmented control (e.g. Month / Quarter / Year toggle) ------------- */
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.segmented-btn {
+  border: none;
+  border-radius: 0;
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  padding: 8px 13px;
+  font-size: 13px;
+}
+.segmented-btn + .segmented-btn {
+  border-left: 1px solid var(--border);
+}
+.segmented-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+.segmented-btn:hover:not(.active) {
+  background: #262b36;
+  color: var(--text);
+}
+
 /* Forms -------------------------------------------------------------- */
 input,
 select {

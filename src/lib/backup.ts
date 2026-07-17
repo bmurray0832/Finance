@@ -1,4 +1,5 @@
 import type { AppState } from '../types'
+import { normalizeState } from '../store/useStore'
 
 export const BACKUP_VERSION = 1
 
@@ -48,14 +49,7 @@ export function parseBackup(text: string): AppState {
     throw new Error('This file does not look like a finance-tracker backup.')
   }
 
-  return {
-    transactions: Array.isArray(s.transactions) ? (s.transactions as AppState['transactions']) : [],
-    rules: Array.isArray(s.rules) ? (s.rules as AppState['rules']) : [],
-    debts: Array.isArray(s.debts) ? (s.debts as AppState['debts']) : [],
-    goals: Array.isArray(s.goals) ? (s.goals as AppState['goals']) : [],
-    savedMappings:
-      s.savedMappings && typeof s.savedMappings === 'object'
-        ? (s.savedMappings as AppState['savedMappings'])
-        : {},
-  }
+  // normalizeState fills in anything missing (including fields added after this
+  // backup was taken, like currentBalance/dismissedRecurring) with safe defaults.
+  return normalizeState(s as Partial<AppState>)
 }

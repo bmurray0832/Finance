@@ -8,7 +8,7 @@ export interface CategoryTotal {
   share: number // 0..100 of total expenses
 }
 
-/** yyyy-mm month key, or 'all'. */
+/** yyyy-mm month key, or 'all'. Used internally by the period helpers below. */
 export function monthKey(iso: string): string {
   return iso.slice(0, 7)
 }
@@ -20,18 +20,44 @@ export function monthLabel(key: string): string {
   return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
 }
 
-/** Distinct months present in the data, newest first. */
-export function availableMonths(txns: Transaction[]): string[] {
+// ---- Period filtering (month / quarter / year) ---------------------------
+// Lets the Dashboard/Transactions filters break spending down by month,
+// quarter, or year instead of just by month.
+
+export type PeriodType = 'month' | 'quarter' | 'year'
+
+/** Period key for a given granularity, e.g. '2026-07', '2026-Q3', or '2026'. */
+export function periodKey(iso: string, type: PeriodType): string {
+  if (!iso) return ''
+  if (type === 'month') return monthKey(iso)
+  const year = iso.slice(0, 4)
+  if (type === 'year') return year
+  const month = Number(iso.slice(5, 7))
+  const quarter = Math.floor((month - 1) / 3) + 1
+  return `${year}-Q${quarter}`
+}
+
+export function periodLabel(key: string, type: PeriodType): string {
+  if (key === 'all') return 'All time'
+  if (type === 'month') return monthLabel(key)
+  if (type === 'year') return key
+  // 'YYYY-QN'
+  const [year, q] = key.split('-')
+  return `${q} ${year}`
+}
+
+/** Distinct periods present in the data, newest first. */
+export function availablePeriods(txns: Transaction[], type: PeriodType): string[] {
   const set = new Set<string>()
   for (const t of txns) {
-    if (t.date) set.add(monthKey(t.date))
+    if (t.date) set.add(periodKey(t.date, type))
   }
   return Array.from(set).sort().reverse()
 }
 
-export function filterByMonth(txns: Transaction[], month: string): Transaction[] {
-  if (month === 'all') return txns
-  return txns.filter((t) => monthKey(t.date) === month)
+export function filterByPeriod(txns: Transaction[], type: PeriodType, period: string): Transaction[] {
+  if (period === 'all') return txns
+  return txns.filter((t) => periodKey(t.date, type) === period)
 }
 
 /** Group expenses (negative amounts, excluding the Income category) by category. */

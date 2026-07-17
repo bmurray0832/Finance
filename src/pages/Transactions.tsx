@@ -1,16 +1,18 @@
 import { useMemo, useState } from 'react'
 import { actions, useStore } from '../store/useStore'
 import ImportModal from '../components/ImportModal'
+import PeriodFilter from '../components/PeriodFilter'
 import { formatCurrency, formatDate } from '../lib/format'
-import { availableMonths, filterByMonth, monthLabel } from '../lib/analytics'
+import { availablePeriods, filterByPeriod, type PeriodType } from '../lib/analytics'
 
 export default function Transactions() {
   const { transactions } = useStore()
   const [importing, setImporting] = useState(false)
-  const [month, setMonth] = useState('all')
+  const [periodType, setPeriodType] = useState<PeriodType>('month')
+  const [period, setPeriod] = useState('all')
   const [search, setSearch] = useState('')
 
-  const months = useMemo(() => availableMonths(transactions), [transactions])
+  const periods = useMemo(() => availablePeriods(transactions, periodType), [transactions, periodType])
 
   const categories = useMemo(() => {
     const set = new Set<string>()
@@ -19,7 +21,7 @@ export default function Transactions() {
   }, [transactions])
 
   const rows = useMemo(() => {
-    let r = filterByMonth(transactions, month)
+    let r = filterByPeriod(transactions, periodType, period)
     if (search.trim()) {
       const q = search.toLowerCase()
       r = r.filter(
@@ -28,7 +30,7 @@ export default function Transactions() {
       )
     }
     return [...r].sort((a, b) => (a.date < b.date ? 1 : -1))
-  }, [transactions, month, search])
+  }, [transactions, periodType, period, search])
 
   return (
     <div>
@@ -76,18 +78,15 @@ export default function Transactions() {
               onChange={(e) => setSearch(e.target.value)}
               style={{ maxWidth: 320 }}
             />
-            <select
-              className="inline-select"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-            >
-              <option value="all">All months</option>
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {monthLabel(m)}
-                </option>
-              ))}
-            </select>
+            <PeriodFilter
+              type={periodType}
+              period={period}
+              periods={periods}
+              onChange={(t, p) => {
+                setPeriodType(t)
+                setPeriod(p)
+              }}
+            />
           </div>
 
           <div style={{ overflowX: 'auto' }}>

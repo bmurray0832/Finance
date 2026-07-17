@@ -12,16 +12,24 @@ uploaded to a server.**
 
 - **📊 Category breakdown** — import any bank's CSV and see spending grouped by
   category, with a donut chart, per-category totals, share of spend, and a
-  month filter.
-- **🧾 Transactions** — search, filter by month, and override any transaction's
-  category. Manual overrides are protected from re-categorization.
+  month/quarter/year filter.
+- **🧾 Transactions** — search, filter by month/quarter/year, and override any
+  transaction's category. Manual overrides are protected from
+  re-categorization.
 - **💳 Debt payoff** — track loans and credit cards, automatically ranked by
   interest rate (then balance) using the **avalanche method** to minimize
   interest paid. Shows weighted APR and monthly interest cost.
 - **🎯 Savings goals** — set targets, log contributions, and watch progress
   bars fill up.
+- **📈 Cash flow** — auto-detects recurring bills and income from your
+  transaction history (rent, subscriptions, paychecks — anything that repeats
+  on a consistent schedule and amount) and projects them forward from your
+  current balance, so you can see how much you can safely spend before your
+  next paycheck and whether any upcoming stretch is tight.
 - **🏷️ Category rules** — keyword rules (e.g. `netflix` → `Subscriptions`)
   auto-categorize transactions. A starter set is included; add your own.
+- **⚙️ Settings** — export a full JSON backup or restore one, for moving your
+  data to another browser or device.
 
 ## Getting started
 

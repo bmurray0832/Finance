@@ -3,23 +3,28 @@ import { Link } from 'react-router-dom'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { useStore } from '../store/useStore'
 import ImportModal from '../components/ImportModal'
+import PeriodFilter from '../components/PeriodFilter'
 import {
-  availableMonths,
+  availablePeriods,
   categoryBreakdown,
   colorFor,
   computeTotals,
-  filterByMonth,
-  monthLabel,
+  filterByPeriod,
+  type PeriodType,
 } from '../lib/analytics'
 import { formatCurrency, formatPercent } from '../lib/format'
 
 export default function Dashboard() {
   const { transactions } = useStore()
   const [importing, setImporting] = useState(false)
-  const [month, setMonth] = useState('all')
+  const [periodType, setPeriodType] = useState<PeriodType>('month')
+  const [period, setPeriod] = useState('all')
 
-  const months = useMemo(() => availableMonths(transactions), [transactions])
-  const filtered = useMemo(() => filterByMonth(transactions, month), [transactions, month])
+  const periods = useMemo(() => availablePeriods(transactions, periodType), [transactions, periodType])
+  const filtered = useMemo(
+    () => filterByPeriod(transactions, periodType, period),
+    [transactions, periodType, period],
+  )
   const totals = useMemo(() => computeTotals(filtered), [filtered])
   const breakdown = useMemo(() => categoryBreakdown(filtered), [filtered])
 
@@ -37,19 +42,16 @@ export default function Dashboard() {
           <div className="page-subtitle">Spending by category from your imported statements</div>
         </div>
         <div className="row gap-wrap">
-          {months.length > 0 && (
-            <select
-              className="inline-select"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-            >
-              <option value="all">All time</option>
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {monthLabel(m)}
-                </option>
-              ))}
-            </select>
+          {transactions.length > 0 && (
+            <PeriodFilter
+              type={periodType}
+              period={period}
+              periods={periods}
+              onChange={(t, p) => {
+                setPeriodType(t)
+                setPeriod(p)
+              }}
+            />
           )}
           <button className="btn-primary" onClick={() => setImporting(true)}>
             + Import CSV
