@@ -1,0 +1,64 @@
+// Core domain types for the finance tracker.
+// Everything is stored locally in the browser — no server, no accounts.
+
+/** A single bank transaction. `amount` is signed: negative = money out, positive = money in. */
+export interface Transaction {
+  id: string
+  date: string // ISO yyyy-mm-dd
+  description: string
+  amount: number
+  category: string
+  account?: string
+  /** True if the user manually set the category (protects it from re-categorization by rules). */
+  categoryLocked?: boolean
+}
+
+/** A keyword rule that auto-assigns a category when a transaction description matches. */
+export interface CategoryRule {
+  id: string
+  /** Case-insensitive substring to look for in the description. */
+  keyword: string
+  category: string
+}
+
+/** A debt to pay down. Ranked by interest rate (desc), then balance (desc) — the avalanche method. */
+export interface Debt {
+  id: string
+  name: string
+  balance: number
+  interestRate: number // annual percentage, e.g. 19.99
+  minPayment?: number
+}
+
+/** A savings goal. */
+export interface Goal {
+  id: string
+  name: string
+  targetAmount: number
+  currentAmount: number
+  targetDate?: string // ISO yyyy-mm-dd
+  note?: string
+}
+
+/** How a bank's CSV columns map onto our transaction fields. Remembered per header signature. */
+export interface ColumnMapping {
+  date: string
+  description: string
+  /** Single signed amount column. Use this OR (debit + credit). */
+  amount?: string
+  /** Separate debit (money out) column. */
+  debit?: string
+  /** Separate credit (money in) column. */
+  credit?: string
+  /** If true, a positive value in `amount` means an expense (money out). Flips the sign. */
+  expensesArePositive?: boolean
+}
+
+export interface AppState {
+  transactions: Transaction[]
+  rules: CategoryRule[]
+  debts: Debt[]
+  goals: Goal[]
+  /** Saved mappings keyed by a signature of the CSV header row. */
+  savedMappings: Record<string, ColumnMapping>
+}
