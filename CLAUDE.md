@@ -25,6 +25,8 @@ asking:
 4. **Debt ranking = avalanche**: sort by interest rate (desc), then balance
    (desc). This is a requested behavior, not a preference — keep it.
 5. **Hosting: Railway** (static serve of `dist/` via `serve`). See Deploy.
+6. **Currency: USD.** Owner confirmed USD is fine — do not add a currency
+   picker or change `format.ts` unless they ask.
 
 ## Run / build / deploy
 
@@ -108,10 +110,10 @@ sample-statement.csv  Demo data for trying the import flow.
 
 ## Known limitations / deferred decisions
 
-- **Currency is hardcoded to USD** in `src/lib/format.ts`
-  (`Intl.NumberFormat ... currency: 'USD'`). Owner was asked; not yet changed.
-  If they want GBP/EUR or a picker, this is the single place to start (persist
-  the choice in the store).
+- **Currency is USD by design** — hardcoded in `src/lib/format.ts`
+  (`Intl.NumberFormat ... currency: 'USD'`). Owner confirmed USD is fine, so
+  this is a settled decision, not a gap. If they ever change their mind,
+  `format.ts` is the single place to start (persist the choice in the store).
 - **Data portability is manual**: JSON export/import exists on the Settings
   page (backup/restore, replaces all on restore). There is still no *automatic*
   cross-device sync — that would need a backend, which is deliberately out of
@@ -124,26 +126,25 @@ sample-statement.csv  Demo data for trying the import flow.
 
 ## Suggested backlog (roughly prioritized)
 
-1. **Currency setting** — store `currency` in `AppState`, thread through
-   `format.ts`. Ask the owner which currency first.
-2. **Monthly trend chart** on the Dashboard (spend over time).
-3. **Budgets per category** with over/under indicators.
-4. **Bulk re-categorize** from the Transactions view (e.g. "create a rule from
+1. **Monthly trend chart** on the Dashboard (spend over time).
+2. **Budgets per category** with over/under indicators.
+3. **Bulk re-categorize** from the Transactions view (e.g. "create a rule from
    this merchant").
-5. **Tests** — unit tests for `csv.ts` parsing/mapping,
+4. **Tests** — unit tests for `csv.ts` parsing/mapping,
    `analytics.categoryBreakdown`, and `backup.parseBackup`; they're pure and
    easy to cover.
-6. **Merge-on-restore option** — restore currently replaces all; a "merge"
+5. **Merge-on-restore option** — restore currently replaces all; a "merge"
    mode (dedupe by id) could be offered alongside replace.
+
+_Not planned: currency picker — owner confirmed USD is fine (see Locked
+product decisions)._
 
 _Done since first handoff: JSON export/import backup (Settings page)._
 
 ## Git / workflow notes
 
-- `main` is the canonical branch and what Railway deploys.
-- The original dev branch `claude/personal-finance-tracker-9yq4xj` exists and
-  is identical to `main` at handoff time; it can be deleted once the owner sets
-  `main` as the GitHub default branch (a repo Setting — not changeable via the
-  tools available in-session).
+- `main` is the default + canonical branch and what Railway deploys.
+- The original dev branch `claude/personal-finance-tracker-9yq4xj` is now
+  redundant (identical to `main`) and safe to delete.
 - Commit style: clear subject + body; co-author trailer is added by the
   harness. Don't put model identifiers in commits/PRs.
