@@ -6,6 +6,7 @@ const links = [
   { to: '/debts', label: 'Debt Payoff', icon: '💳' },
   { to: '/goals', label: 'Savings Goals', icon: '🎯' },
   { to: '/rules', label: 'Category Rules', icon: '🏷️' },
+  { to: '/settings', label: 'Settings', icon: '⚙️' },
 ]
 
 export default function Layout() {

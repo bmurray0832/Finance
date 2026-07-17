@@ -57,6 +57,7 @@ src/
     categorize.ts     DEFAULT_RULES + categorize(); UNCATEGORIZED / INCOME consts.
     analytics.ts      Month filtering, category breakdown, totals, chart palette.
     format.ts         Currency/percent/date formatting + makeId().
+    backup.ts         JSON backup envelope: buildBackup() / parseBackup().
   components/
     Layout.tsx        Sidebar nav + <Outlet/>.
     ImportModal.tsx   The whole import flow: file -> map columns -> preview -> commit.
@@ -66,6 +67,7 @@ src/
     Debts.tsx         Avalanche ranking, add/edit/delete, "focus first" banner.
     Goals.tsx         Progress cards, contribute, add/edit/delete.
     Rules.tsx         Manage keyword rules; re-apply to all.
+    Settings.tsx      JSON export/import (backup & restore) + data summary.
 sample-statement.csv  Demo data for trying the import flow.
 ```
 
@@ -99,6 +101,8 @@ sample-statement.csv  Demo data for trying the import flow.
 - Debts: avalanche ranking, weighted APR, monthly interest, focus banner, CRUD.
 - Goals: progress bars, contributions, CRUD, "reached" state.
 - Rules: CRUD + re-apply, datalist of existing categories.
+- Settings: JSON export (versioned envelope) + restore-from-file (replaces all,
+  with confirmation), plus a per-browser data summary. Round-trip verified.
 - Railway deploy config; verified `npm run build` and `npm run start`.
 - End-to-end verified in headless Chromium (import, ranking, goal progress).
 
@@ -108,9 +112,10 @@ sample-statement.csv  Demo data for trying the import flow.
   (`Intl.NumberFormat ... currency: 'USD'`). Owner was asked; not yet changed.
   If they want GBP/EUR or a picker, this is the single place to start (persist
   the choice in the store).
-- **No data portability**: data is per-browser, per-device. An
-  export/import (JSON backup) button was offered but not built — this is the
-  top backlog item if they want cross-device use without a backend.
+- **Data portability is manual**: JSON export/import exists on the Settings
+  page (backup/restore, replaces all on restore). There is still no *automatic*
+  cross-device sync — that would need a backend, which is deliberately out of
+  scope.
 - **No tests** yet (only ad-hoc Playwright smoke runs during development).
 - **No monthly trend / time series** — only per-period breakdown.
 - Bundle is ~580 kB (recharts). Fine for a local app; code-split if it grows.
@@ -119,17 +124,19 @@ sample-statement.csv  Demo data for trying the import flow.
 
 ## Suggested backlog (roughly prioritized)
 
-1. **JSON export/import (backup/restore)** — highest value; unblocks
-   cross-device use while staying local-only. Add to a Settings page or the
-   Transactions header. Serialize the whole `AppState`.
-2. **Currency setting** — store `currency` in `AppState`, thread through
+1. **Currency setting** — store `currency` in `AppState`, thread through
    `format.ts`. Ask the owner which currency first.
-3. **Monthly trend chart** on the Dashboard (spend over time).
-4. **Budgets per category** with over/under indicators.
-5. **Bulk re-categorize** from the Transactions view (e.g. "create a rule from
+2. **Monthly trend chart** on the Dashboard (spend over time).
+3. **Budgets per category** with over/under indicators.
+4. **Bulk re-categorize** from the Transactions view (e.g. "create a rule from
    this merchant").
-6. **Tests** — unit tests for `csv.ts` parsing/mapping and
-   `analytics.categoryBreakdown`; they're pure and easy to cover.
+5. **Tests** — unit tests for `csv.ts` parsing/mapping,
+   `analytics.categoryBreakdown`, and `backup.parseBackup`; they're pure and
+   easy to cover.
+6. **Merge-on-restore option** — restore currently replaces all; a "merge"
+   mode (dedupe by id) could be offered alongside replace.
+
+_Done since first handoff: JSON export/import backup (Settings page)._
 
 ## Git / workflow notes
 

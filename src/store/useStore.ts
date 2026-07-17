@@ -147,6 +147,18 @@ export const actions = {
       savedMappings: { ...prev.savedMappings, [signature]: mapping },
     }))
   },
+
+  // Backup / restore ---------------------------------------------------
+  /** Replace the entire app state — used when restoring a JSON backup. */
+  replaceAll(next: AppState) {
+    setState(() => ({
+      transactions: next.transactions ?? [],
+      rules: next.rules ?? [],
+      debts: next.debts ?? [],
+      goals: next.goals ?? [],
+      savedMappings: next.savedMappings ?? {},
+    }))
+  },
 }
 
 /** Convenience hook returning a stable reference to the actions object. */
