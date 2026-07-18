@@ -1,12 +1,14 @@
 # Finance Tracker
 
-A private, **browser-only** personal finance tracker. Import your bank
-statement CSVs to get a per-category spending breakdown, rank your debts for
-fastest payoff, and track savings goals.
+A private personal finance tracker for a household. Import your bank statement
+CSVs to get a per-category spending breakdown, rank your debts for fastest
+payoff, track savings goals and budgets, and forecast cash flow.
 
-Everything runs locally in your browser — your statements are parsed on your
-own machine and stored in the browser's `localStorage`. **Nothing is ever
-uploaded to a server.**
+Data is synced to a **private, password-protected household account** so both
+people can see and edit the same numbers from their own devices. It's served by
+a small Node/Express + Postgres backend; the browser keeps a local cache for
+fast loads and offline viewing. There is **no public sign-up** — only the
+seeded household account(s) can log in.
 
 ## Features
 
@@ -35,19 +37,43 @@ uploaded to a server.**
 - **Settings** — export a full JSON backup or restore one, for moving your
   data to another browser or device.
 
-## Getting started
+## Getting started (local dev)
 
 ```bash
 npm install
-npm run dev      # start the dev server (http://localhost:5173)
+
+# 1. Start the backend (serves the API; falls back to a local JSON file when
+#    DATABASE_URL is unset, so no Postgres is needed for dev).
+AUTH_EMAIL=you@example.com AUTH_PASSWORD=devpass JWT_SECRET=dev-secret npm run dev:server
+
+# 2. In another terminal, start the Vite dev server (proxies /api to :3000).
+npm run dev      # http://localhost:5173
 ```
 
-To build for production:
+Log in with the `AUTH_EMAIL` / `AUTH_PASSWORD` you set above.
+
+To build and run the production server (serves the built app + API on one port):
 
 ```bash
 npm run build
-npm run preview
+AUTH_EMAIL=... AUTH_PASSWORD=... JWT_SECRET=... npm run start   # http://localhost:3000
 ```
+
+See `.env.example` for all configuration.
+
+## Deploy (Railway)
+
+1. Add a **Postgres** database to your Railway project (provides `DATABASE_URL`).
+2. On the app service, set variables: `AUTH_EMAIL`, `AUTH_PASSWORD`,
+   `JWT_SECRET` (a long random string), and `NODE_ENV=production`. Set
+   `DATABASE_SSL=true` if your Postgres requires SSL.
+3. Deploy from `main`. Nixpacks runs `npm run build` then `npm run start`
+   (`node server/index.js`), which serves the app and API on Railway's `$PORT`.
+4. Generate a domain and share it with your household. Everyone logs in with the
+   same credentials and sees the same data.
+
+The first time you log in on the browser that already had local (pre-backend)
+data, that data is pushed up to the server automatically so nothing is lost.
 
 ## Importing a statement
 
@@ -70,11 +96,15 @@ A `sample-statement.csv` is included so you can try it immediately.
 
 ## Tech
 
-React + TypeScript + Vite, PapaParse for CSV parsing, Recharts for the chart,
-and `localStorage` for persistence. No backend.
+Frontend: React + TypeScript + Vite, PapaParse for CSV parsing, Recharts for
+charts. Backend: Node/Express with Postgres (JSON-file fallback for dev), auth
+via bcrypt-hashed passwords and a JWT in an httpOnly cookie. The browser keeps a
+`localStorage` cache of the shared state for fast loads.
 
-## Privacy
+## Privacy & access
 
-All data lives in your browser. Clearing your browser storage (or using the
-**Clear all** button) removes it. There are no accounts, no network calls, and
-no telemetry.
+Your data lives in your own Postgres database behind a login you control — it is
+not shared with anyone who doesn't have the household credentials, and there is
+no public registration. Passwords are bcrypt-hashed; sessions use a signed,
+httpOnly cookie over HTTPS. Rotating `JWT_SECRET` logs everyone out. There is no
+third-party analytics or telemetry.

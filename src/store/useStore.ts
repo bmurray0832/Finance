@@ -2,6 +2,7 @@ import { useCallback, useSyncExternalStore } from 'react'
 import type { AppState, CategoryRule, Debt, Goal, Transaction, ColumnMapping } from '../types'
 import { DEFAULT_RULES, categorize } from '../lib/categorize'
 import { makeId } from '../lib/format'
+import { api } from '../lib/api'
 
 const STORAGE_KEY = 'finance-tracker-state-v1'
 
@@ -58,7 +59,11 @@ function loadState(): AppState {
 let state: AppState = loadState()
 const listeners = new Set<() => void>()
 
-function persist() {
+/** True once the shared server state has been loaded — gates saving back to the server. */
+let serverSynced = false
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
+function persistLocal() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
@@ -66,10 +71,72 @@ function persist() {
   }
 }
 
+/** Debounced push of the whole state document to the server (last-write-wins). */
+function scheduleServerSave() {
+  if (!serverSynced) return
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    api.putState(state).catch(() => {
+      // Offline or transient error: the localStorage cache still holds the
+      // change, and the next successful mutation will push the latest state.
+    })
+  }, 600)
+}
+
+function persist() {
+  persistLocal()
+  scheduleServerSave()
+}
+
 function setState(updater: (prev: AppState) => AppState) {
   state = updater(state)
   persist()
   listeners.forEach((l) => l())
+}
+
+/**
+ * Load the shared household state from the server after login. If the server
+ * has data, it wins (it's the source of truth across devices). If the server
+ * is empty but this browser has local data (e.g. the owner's pre-backend
+ * data), push the local data up so nothing is lost.
+ */
+export async function hydrateFromServer(): Promise<void> {
+  let server: Partial<AppState> = {}
+  try {
+    server = await api.getState()
+  } catch {
+    // If the fetch fails, fall back to the local cache and allow saves to retry.
+    serverSynced = true
+    return
+  }
+  const serverState = normalizeState(server)
+  const serverEmpty =
+    serverState.transactions.length === 0 &&
+    serverState.debts.length === 0 &&
+    serverState.goals.length === 0
+  const localHasData =
+    state.transactions.length > 0 || state.debts.length > 0 || state.goals.length > 0
+
+  serverSynced = true
+  if (serverEmpty && localHasData) {
+    // Seed the server with this browser's existing data (one-time migration).
+    persist()
+  } else {
+    state = serverState
+    persistLocal()
+    listeners.forEach((l) => l())
+  }
+}
+
+/** Clear the local cache and stop syncing (used on logout). */
+export function resetLocalState(): void {
+  serverSynced = false
+  if (saveTimer) clearTimeout(saveTimer)
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // ignore
+  }
 }
 
 function subscribe(listener: () => void) {

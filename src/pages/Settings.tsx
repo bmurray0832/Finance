@@ -54,7 +54,7 @@ export default function Settings() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Settings</h1>
-          <div className="page-subtitle">Back up your data or move it to another device</div>
+          <div className="page-subtitle">Back up your household data or keep an offline copy</div>
         </div>
       </div>
 
@@ -76,8 +76,8 @@ export default function Settings() {
       <div className="card mb-24">
         <div className="section-title">Backup &amp; restore</div>
         <p className="dim" style={{ marginTop: 0 }}>
-          Your data lives only in this browser. Export a JSON backup to keep a safety copy or to
-          load it into the app on another device or browser.
+          Your data is synced to your private household account and shared with everyone who signs
+          in. Export a JSON backup any time to keep an offline safety copy.
         </p>
 
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', marginTop: 16 }}>
@@ -121,7 +121,7 @@ export default function Settings() {
       </div>
 
       <div className="card">
-        <div className="section-title">This browser holds</div>
+        <div className="section-title">Your household account holds</div>
         <table>
           <tbody>
             <tr>
@@ -143,7 +143,8 @@ export default function Settings() {
           </tbody>
         </table>
         <p className="hint">
-          This data is never uploaded. Clearing your browser storage removes it — keep a backup.
+          This is synced to your household account, so it's shared across your devices. A JSON
+          backup is still handy as an offline safety copy.
         </p>
       </div>
     </div>

@@ -1,4 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { api } from '../lib/api'
+import { resetLocalState } from '../store/useStore'
 
 const links = [
   { to: '/', label: 'Dashboard', end: true },
@@ -10,6 +12,16 @@ const links = [
   { to: '/rules', label: 'Category Rules' },
   { to: '/settings', label: 'Settings' },
 ]
+
+async function logout() {
+  try {
+    await api.logout()
+  } catch {
+    // ignore network error — clear locally and reload regardless
+  }
+  resetLocalState()
+  window.location.reload()
+}
 
 export default function Layout() {
   return (
@@ -30,7 +42,12 @@ export default function Layout() {
           </NavLink>
         ))}
         <div className="sidebar-footer">
-          All data stays in your browser. Nothing is uploaded.
+          <button className="btn-ghost btn-sm" onClick={logout} style={{ width: '100%' }}>
+            Log out
+          </button>
+          <div style={{ marginTop: 10 }}>
+            Shared household account. Synced privately across your devices.
+          </div>
         </div>
       </aside>
       <main className="main">

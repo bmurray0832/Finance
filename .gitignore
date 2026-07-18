@@ -7,3 +7,7 @@ dist-ssr
 !.vscode/extensions.json
 *.log
 npm-debug.log*
+
+# Local dev data store
+server/.data.json
+.env

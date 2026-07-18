@@ -551,3 +551,16 @@ tr:last-child td {
   margin-left: auto;
   display: block;
 }
+
+/* Login screen ------------------------------------------------------- */
+.login-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow);
+}

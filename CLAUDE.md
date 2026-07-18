@@ -6,25 +6,36 @@ conventions, current state, and a prioritized backlog.
 
 ## What this is
 
-A **private, browser-only personal finance tracker**. It ingests bank
-statement CSVs and shows a per-category spending breakdown, ranks debts for
-payoff, and tracks savings goals. **There is no backend.** All data is parsed
-in the browser and persisted to `localStorage`. Nothing is ever uploaded.
+A **private household personal finance tracker**. It ingests bank statement
+CSVs and shows a per-category spending breakdown, ranks debts for payoff,
+tracks savings goals and budgets, and forecasts cash flow. Data is stored on a
+small **Node/Express + Postgres backend** behind a shared login, so both
+spouses see and edit the same data from their own devices. The browser keeps a
+`localStorage` cache of the shared state for fast loads and offline viewing.
+
+> **NOTE — the original "browser-only, no backend" design was intentionally
+> reversed** at the owner's request (they needed the owner's wife to see the
+> same uploaded transactions from another device). The old locked decision #1
+> ("local browser app, bank data never leaves the device") no longer holds.
+> Everything else about the app is unchanged.
 
 ## Locked product decisions
 
 These were chosen by the owner (bmurray0832). Do not reverse them without
 asking:
 
-1. **Local browser app** (React + TypeScript + Vite), not full-stack. Privacy
-   is the reason — bank data never leaves the device.
+1. **Shared-account full-stack app** (React + TS + Vite frontend, Node/Express
+   + Postgres backend). Auth is a **single shared household login** (one
+   email+password both spouses use), seeded from env — **no public sign-up**.
+   (This replaced the original local-only design; see note above.)
 2. **Flexible CSV column mapping** — works with any bank. On import the user
    maps their columns; the mapping is remembered per header signature.
 3. **Keyword rules + manual override** for categorization. A starter rule set
    ships in `src/lib/categorize.ts`.
 4. **Debt ranking = avalanche**: sort by interest rate (desc), then balance
    (desc). This is a requested behavior, not a preference — keep it.
-5. **Hosting: Railway** (static serve of `dist/` via `serve`). See Deploy.
+5. **Hosting: Railway** (Node server serves `dist/` + API; Railway Postgres).
+   See Deploy.
 6. **Currency: USD.** Owner confirmed USD is fine — do not add a currency
    picker or change `format.ts` unless they ask.
 7. **Cash flow forecast = auto-detect only, manual balance.** The owner chose
@@ -40,28 +51,50 @@ asking:
 
 ```bash
 npm install
-npm run dev      # dev server, http://localhost:5173
-npm run build    # typecheck (tsc --noEmit) + vite build -> dist/
-npm run start    # prod: serve -s dist -l ${PORT:-3000}  (what Railway runs)
+# Dev: run the backend + the Vite dev server (two terminals).
+AUTH_EMAIL=you@x.com AUTH_PASSWORD=devpass JWT_SECRET=dev npm run dev:server  # :3000
+npm run dev          # :5173, proxies /api -> :3000
+npm run build        # typecheck (tsc --noEmit) + vite build -> dist/
+npm run start        # prod: node server/index.js  (serves dist/ + API on $PORT)
 ```
 
+- **Backend** (`server/index.js` + `server/store.js`): Express serving the SPA
+  and a small API — `/api/login`, `/api/logout`, `/api/me`,
+  `GET/PUT /api/state`. Storage is Postgres when `DATABASE_URL` is set, else a
+  local JSON file (`server/.data.json`) for dev. State is a single shared
+  document (one row); auth is one shared user seeded from `AUTH_EMAIL`/
+  `AUTH_PASSWORD` (bcrypt-hashed). JWT in an httpOnly cookie (`ft_token`),
+  signed with `JWT_SECRET`; login is rate-limited (10 fails/15 min/IP).
+- **Env vars** (see `.env.example`): `AUTH_EMAIL`, `AUTH_PASSWORD`,
+  `JWT_SECRET` (required in prod), `DATABASE_URL` (from Railway Postgres),
+  optional `DATABASE_SSL=true`, `NODE_ENV=production`. `PORT` is provided by
+  Railway. Rotating `JWT_SECRET` logs everyone out. Changing `AUTH_PASSWORD` +
+  redeploy rotates the shared password (the seed upserts the user's hash).
 - **Railway**: `railway.json` uses Nixpacks → `npm run build` → `npm run start`.
-  Deploy branch should be `main`. No env vars, no DB, no secrets.
-- Routing uses **HashRouter** on purpose, so no server rewrite rules are
-  needed on any static host. URLs look like `/#/debts`.
-- `serve` is a runtime dep (in `dependencies`, not `devDependencies`) so it
-  survives dependency pruning at runtime.
+  Add the Postgres plugin and set the env vars above. Deploy branch = `main`.
+- Routing uses **HashRouter**, so no server rewrite rules are needed; the
+  Express `*` fallback serves `index.html` anyway.
+- **No `serve` dependency anymore** — the Express server replaced it.
 
 ## Architecture / file map
 
 ```
+server/
+  index.js            Express: serves dist/ + API (login/logout/me/state),
+                      JWT-cookie auth, bcrypt, login throttle.
+  store.js            Storage layer: Postgres (DATABASE_URL) or JSON file
+                      fallback; init() seeds the shared user + empty state row.
 src/
-  main.tsx            Router (HashRouter) + route table
+  main.tsx            <AuthGate> wrapping Router (HashRouter) + route table
   types.ts            All domain types (Transaction, Debt, Goal, CategoryRule, ColumnMapping)
   index.css           Design system (dark theme, CSS variables). No CSS framework.
-  store/useStore.ts   Single localStorage-backed store via useSyncExternalStore.
-                      Exposes `useStore()` (read) and `actions` (mutations).
+  store/useStore.ts   Shared store via useSyncExternalStore. Loads state from the
+                      server (hydrateFromServer) after login, saves changes back
+                      (debounced PUT), keeps a localStorage cache. Exposes
+                      `useStore()` (read), `actions` (mutations),
+                      `hydrateFromServer`, `resetLocalState`, `normalizeState`.
   lib/
+    api.ts            fetch client for the backend (me/login/logout/get+putState).
     csv.ts            PapaParse wrapper, header signature, mapping guess,
                       rows -> Transactions, number/date parsing, dedupe.
     categorize.ts     DEFAULT_RULES + categorize(); UNCATEGORIZED / INCOME consts.
@@ -82,7 +115,9 @@ src/
     format.ts         Currency/percent/date formatting + makeId().
     backup.ts         JSON backup envelope: buildBackup() / parseBackup().
   components/
-    Layout.tsx        Sidebar nav + <Outlet/>.
+    AuthGate.tsx      Checks /api/me; shows <Login> or hydrates + renders the app.
+    Login.tsx         Full-screen shared-account sign-in form.
+    Layout.tsx        Sidebar nav + Log out + <Outlet/>.
     ImportModal.tsx   The whole import flow: file -> map columns -> preview -> commit.
     PeriodFilter.tsx  Month/Quarter/Year segmented toggle + period dropdown;
                       shared by Dashboard and Transactions.
@@ -117,12 +152,17 @@ sample-statement.csv  Demo data for trying the import flow.
 - **Manual category overrides are sticky**: `updateTransactionCategory` sets
   `categoryLocked: true`, and `reapplyRules()` skips locked transactions.
   Preserve this — re-running rules must never clobber a user's manual choice.
-- **Persistence**: single key `finance-tracker-state-v1` in `localStorage`.
-  If you change the shape of `AppState` in a breaking way, bump the key and add
-  a migration in `store/useStore.ts` (`loadState`). Additive fields (new
-  optional-with-default properties like `currentBalance` or
-  `dismissedRecurring`) don't need a bump — `normalizeState()` defaults
-  anything missing, so older localStorage/backups still load fine.
+- **Persistence**: the **server is the source of truth** — the whole `AppState`
+  is stored as one shared JSON document (`app_state` row, or `state` in the dev
+  JSON file). `localStorage` (`finance-tracker-state-v1`) is now just a **cache**
+  for fast loads/offline; `hydrateFromServer()` overwrites it from the server on
+  login (unless the server is empty and the browser has data, in which case the
+  local data is pushed up — the one-time migration). Every mutation persists to
+  the cache immediately and schedules a debounced `PUT /api/state`. Sync is
+  **last-write-wins** across devices. If you change `AppState`'s shape, keep it
+  additive — `normalizeState()` defaults anything missing, so old
+  cache/backups/server docs still load; a breaking change needs a real migration
+  on the stored document, not just a localStorage key bump.
 - **Recurring detection is re-run on every render** from `transactions` via
   `useMemo` in `CashFlow.tsx` — nothing about detected patterns is persisted
   except the user's dismiss list (`dismissedRecurring: string[]`, keyed by the
@@ -181,6 +221,14 @@ sample-statement.csv  Demo data for trying the import flow.
   `currentBalance`/`dismissedRecurring`) still restores cleanly instead of
   wiping them. Also shows a per-browser data summary table. Round-trip
   verified.
+- **Backend + shared login** (`server/`): Node/Express + Postgres (JSON-file
+  fallback in dev). Shared household account seeded from env, bcrypt + JWT
+  httpOnly cookie, login rate-limit, no public sign-up. Store now server-backed
+  (localStorage = cache); first login pushes any pre-backend browser data up.
+  Verified end-to-end in headless Chromium: unauth → login screen, wrong
+  password error, correct login → app, import → state persisted to server,
+  reload stays logged in with data from server, logout, and the one-time
+  local→server migration.
 - Railway deploy config; verified `npm run build` and `npm run start`.
 - End-to-end verified in headless Chromium: import, ranking, goal progress;
   the export → clear → restore → reload round-trip for backups; recurring
@@ -196,10 +244,17 @@ sample-statement.csv  Demo data for trying the import flow.
   (`Intl.NumberFormat ... currency: 'USD'`). Owner confirmed USD is fine, so
   this is a settled decision, not a gap. If they ever change their mind,
   `format.ts` is the single place to start (persist the choice in the store).
-- **Data portability is manual**: JSON export/import exists on the Settings
-  page (backup/restore, replaces all on restore). There is still no *automatic*
-  cross-device sync — that would need a backend, which is deliberately out of
-  scope.
+- **Cross-device sync is now built in** (shared server account). Sync is
+  whole-document **last-write-wins**: if both people save different changes
+  within the ~600ms debounce window, the later PUT wins and the earlier change
+  is lost. Fine for two occasional users; if it becomes a problem, move to
+  field-level updates or add updated_at conflict checks. JSON export/import on
+  Settings still exists as an offline backup.
+- **Auth is a single shared login** (per locked decision #1). There's no
+  per-user identity, so you can't tell who changed what. Individual logins
+  (still one shared dataset) would be a small extension if wanted.
+- **Secrets live in env vars** (`AUTH_PASSWORD`, `JWT_SECRET`). There's no
+  in-app password change or password-reset flow — rotate via env + redeploy.
 - **No tests** yet (only ad-hoc Playwright smoke runs during development).
 - **No monthly trend / time series** — only per-period breakdown (the new
   month/quarter/year filter changes granularity, but still shows one period
