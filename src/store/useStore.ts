@@ -16,6 +16,8 @@ const EMPTY_STATE: AppState = {
   currentBalanceUpdatedAt: null,
   dismissedRecurring: [],
   budgets: {},
+  payAmount: 0,
+  payWeekday: 4,
 }
 
 /**
@@ -43,6 +45,11 @@ function normalizeState(parsed: Partial<AppState> | null | undefined): AppState 
       parsed.budgets && typeof parsed.budgets === 'object'
         ? (parsed.budgets as Record<string, number>)
         : {},
+    payAmount: typeof parsed.payAmount === 'number' ? parsed.payAmount : 0,
+    payWeekday:
+      typeof parsed.payWeekday === 'number' && parsed.payWeekday >= 0 && parsed.payWeekday <= 6
+        ? parsed.payWeekday
+        : 4,
   }
 }
 
@@ -265,6 +272,16 @@ export const actions = {
           ? prev.dismissedRecurring
           : [...prev.dismissedRecurring, key]
         : prev.dismissedRecurring.filter((k) => k !== key),
+    }))
+  },
+
+  // Income ---------------------------------------------------------------
+  /** Set the recurring paycheck amount and the weekday it lands on (0=Sun..6=Sat). */
+  setIncomePlan(payAmount: number, payWeekday: number) {
+    setState((prev) => ({
+      ...prev,
+      payAmount: !payAmount || payAmount < 0 || isNaN(payAmount) ? 0 : payAmount,
+      payWeekday: payWeekday >= 0 && payWeekday <= 6 ? payWeekday : prev.payWeekday,
     }))
   },
 

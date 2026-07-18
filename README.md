@@ -26,7 +26,9 @@ seeded household account(s) can log in.
   bars fill up.
 - **Budgets** — set a monthly budget per category; the Dashboard shows planned
   vs actual with stoplight colors (green at/under, amber up to 10% over, red
-  more than 10% over) and how far off you are.
+  more than 10% over) and how far off you are. Set your paycheck + payday to
+  project monthly income (paycheck × the number of that weekday in the month, so
+  4 or 5) and see how much is left to allocate.
 - **Cash flow** — auto-detects recurring bills and income from your
   transaction history (rent, subscriptions, paychecks — anything that repeats
   on a consistent schedule and amount) and projects them forward from your

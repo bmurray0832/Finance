@@ -119,6 +119,33 @@ export function colorFor(index: number): string {
   return PALETTE[index % PALETTE.length]
 }
 
+/**
+ * How many times a given weekday (0=Sun..6=Sat) occurs in a month.
+ * `monthKey` is 'YYYY-MM'. Used to project a weekly paycheck: a month has
+ * either 4 or 5 of any given weekday.
+ */
+export function weekdayCountInMonth(monthKey: string, weekday: number): number {
+  const [y, m] = monthKey.split('-').map(Number)
+  if (!y || !m) return 0
+  const daysInMonth = new Date(y, m, 0).getDate()
+  let count = 0
+  for (let d = 1; d <= daysInMonth; d++) {
+    if (new Date(y, m - 1, d).getDay() === weekday) count++
+  }
+  return count
+}
+
+/** Weekday names indexed 0=Sun..6=Sat. */
+export const WEEKDAYS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+]
+
 /** Number of distinct calendar months present in a set of transactions (min 1). */
 export function distinctMonthCount(txns: Transaction[]): number {
   const set = new Set<string>()

@@ -69,4 +69,8 @@ export interface AppState {
   dismissedRecurring: string[]
   /** Per-category monthly spending budgets, keyed by category name. */
   budgets: Record<string, number>
+  /** Amount of a single paycheck (0 if not configured). */
+  payAmount: number
+  /** Day of week the paycheck lands, 0=Sun..6=Sat. Default 4 (Thursday). */
+  payWeekday: number
 }

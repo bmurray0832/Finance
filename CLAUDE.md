@@ -134,7 +134,11 @@ src/
                       + lowest-balance stats, upcoming events table, detected
                       recurring bills/income with dismiss/restore.
     Budgets.tsx       Set a monthly budget per category; shows each category's
-                      spend for the latest month with a stoplight delta.
+                      spend for the latest month with a stoplight delta. Also an
+                      Income section: paycheck amount + payday weekday → projected
+                      monthly income (paycheck × count of that weekday in the
+                      month, i.e. 4 or 5). Income-proj card + "left to allocate"
+                      on the budget card.
     Rules.tsx         Manage keyword rules; re-apply to all.
     Settings.tsx      JSON export/import (backup & restore) + data summary.
 sample-statement.csv  Demo data for trying the import flow.
@@ -190,6 +194,11 @@ sample-statement.csv  Demo data for trying the import flow.
   the number of months in the selected period. Persisted as
   `budgets: Record<category, number>` in the store (additive, defaulted by
   `normalizeState`, included in JSON backups). No emoji anywhere in the UI.
+- Income projection on Budgets: `payAmount` + `payWeekday` (0-6, default 4=Thu)
+  in the store; `weekdayCountInMonth()`/`WEEKDAYS` in analytics.ts. Projected
+  monthly income = paycheck × number of that weekday in the reference month
+  (4 or 5), shown as an "Income proj" card; the Total monthly budget card shows
+  "left to allocate" (income − budget) / "over income".
 - Transactions: search, month/quarter/year filter, category filter, inline
   category override (with "New category…" to create a new one on the fly),
   a "Showing N of M" count + Clear filters, delete, clear.

@@ -2,17 +2,25 @@ import { useMemo, useState } from 'react'
 import { actions, useStore } from '../store/useStore'
 import { INCOME } from '../lib/categorize'
 import {
+  WEEKDAYS,
   availablePeriods,
   budgetLevelClass,
   budgetStatus,
   categoryBreakdown,
   filterByPeriod,
   periodLabel,
+  weekdayCountInMonth,
 } from '../lib/analytics'
 import { formatCurrency, formatPercent } from '../lib/format'
 
+/** 'YYYY-MM' key for the current calendar month (fallback when there's no data yet). */
+function currentMonthKey(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
 export default function Budgets() {
-  const { transactions, budgets } = useStore()
+  const { transactions, budgets, payAmount, payWeekday } = useStore()
   const [newCat, setNewCat] = useState('')
   const [newAmt, setNewAmt] = useState('')
 
@@ -20,6 +28,11 @@ export default function Budgets() {
   const months = useMemo(() => availablePeriods(transactions, 'month'), [transactions])
   const refMonth = months[0] ?? null
   const refLabel = refMonth ? periodLabel(refMonth, 'month') : 'this month'
+
+  // Projected income = paycheck × number of paydays (that weekday) in the month.
+  const incomeMonth = refMonth ?? currentMonthKey()
+  const payCount = weekdayCountInMonth(incomeMonth, payWeekday)
+  const projectedIncome = payAmount * payCount
 
   const actualByCat = useMemo(() => {
     const map = new Map<string, number>()
@@ -73,17 +86,72 @@ export default function Budgets() {
         <>
           <div className="grid stat-grid">
             <div className="card stat-card">
+              <div className="stat-label">Income proj ({refLabel})</div>
+              <div className="stat-value pos">{formatCurrency(projectedIncome)}</div>
+              <div className="hint" style={{ marginTop: 6 }}>
+                {payAmount > 0
+                  ? `${formatCurrency(payAmount)} × ${payCount} ${WEEKDAYS[payWeekday]}s`
+                  : 'Set your paycheck below'}
+              </div>
+            </div>
+            <div className="card stat-card">
               <div className="stat-label">Total monthly budget</div>
               <div className="stat-value">{formatCurrency(totalBudget)}</div>
+              {payAmount > 0 && (
+                <div
+                  className={'hint ' + (projectedIncome - totalBudget >= 0 ? 'pos' : 'neg')}
+                  style={{ marginTop: 6 }}
+                >
+                  {projectedIncome - totalBudget >= 0
+                    ? `${formatCurrency(projectedIncome - totalBudget)} left to allocate`
+                    : `${formatCurrency(totalBudget - projectedIncome)} over income`}
+                </div>
+              )}
             </div>
             <div className="card stat-card">
               <div className="stat-label">Spent ({refLabel})</div>
               <div className="stat-value">{formatCurrency(totalActual)}</div>
             </div>
             <div className="card stat-card">
-              <div className="stat-label">{overall.delta > 0 ? 'Over by' : 'Remaining'}</div>
+              <div className="stat-label">{overall.delta > 0 ? 'Over budget by' : 'Under budget'}</div>
               <div className={'stat-value ' + budgetLevelClass(overall.level)}>
                 {formatCurrency(Math.abs(overall.delta))}
+              </div>
+            </div>
+          </div>
+
+          <div className="card mb-24">
+            <div className="section-title">Income</div>
+            <div className="form-row" style={{ alignItems: 'flex-end' }}>
+              <div className="field" style={{ marginBottom: 0, maxWidth: 200 }}>
+                <label>Paycheck amount</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={payAmount ? String(payAmount) : ''}
+                  placeholder="0.00"
+                  onChange={(e) => actions.setIncomePlan(parseFloat(e.target.value), payWeekday)}
+                />
+              </div>
+              <div className="field" style={{ marginBottom: 0, maxWidth: 200 }}>
+                <label>Payday</label>
+                <select
+                  value={payWeekday}
+                  onChange={(e) => actions.setIncomePlan(payAmount, Number(e.target.value))}
+                >
+                  {WEEKDAYS.map((w, i) => (
+                    <option key={w} value={i}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field" style={{ marginBottom: 0 }}>
+                <span className="hint" style={{ marginTop: 0 }}>
+                  {payAmount > 0
+                    ? `${refLabel} has ${payCount} ${WEEKDAYS[payWeekday]}s → projected income ${formatCurrency(projectedIncome)} (${formatCurrency(payAmount)} × ${payCount}).`
+                    : 'Enter your paycheck and payday to project monthly income (paycheck × paydays that month).'}
+                </span>
               </div>
             </div>
           </div>
