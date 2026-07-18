@@ -77,7 +77,6 @@ export default function Transactions() {
 
       {transactions.length === 0 ? (
         <div className="card empty">
-          <div className="empty-icon">🧾</div>
           <h3>Nothing imported yet</h3>
           <p className="dim" style={{ margin: '8px 0 20px' }}>
             Import a bank statement to get started.
@@ -170,7 +169,7 @@ export default function Transactions() {
                           </option>
                         ))}
                         <option disabled>──────────</option>
-                        <option value={NEW_CATEGORY}>➕ New category…</option>
+                        <option value={NEW_CATEGORY}>+ New category…</option>
                       </select>
                     </td>
                     <td className={'num ' + (t.amount < 0 ? 'neg' : 'pos')}>
@@ -182,7 +181,7 @@ export default function Transactions() {
                         title="Delete"
                         onClick={() => actions.deleteTransaction(t.id)}
                       >
-                        ✕
+                        ×
                       </button>
                     </td>
                   </tr>

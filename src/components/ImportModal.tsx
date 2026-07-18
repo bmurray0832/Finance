@@ -76,7 +76,7 @@ export default function ImportModal({ onClose }: Props) {
         <div className="row-between mb-24">
           <h2>Import transactions</h2>
           <button className="btn-ghost btn-sm" onClick={onClose}>
-            ✕
+            ×
           </button>
         </div>
 
@@ -280,7 +280,6 @@ function FileDrop({ onFile }: { onFile: (f: File) => void }) {
         if (file) onFile(file)
       }}
     >
-      <div style={{ fontSize: 36, marginBottom: 10 }}>📁</div>
       <div style={{ fontWeight: 600, marginBottom: 4 }}>Drop a bank statement CSV here</div>
       <div className="hint" style={{ marginTop: 0 }}>or click to browse</div>
       <input

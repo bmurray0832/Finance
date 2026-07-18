@@ -74,7 +74,6 @@ export default function CashFlow() {
 
       {transactions.length === 0 ? (
         <div className="card empty">
-          <div className="empty-icon">📈</div>
           <h3>No transactions yet</h3>
           <p className="dim" style={{ margin: '8px 0 0' }}>
             Import statements first — the forecast learns your bills and income from history.
@@ -82,7 +81,6 @@ export default function CashFlow() {
         </div>
       ) : allPatterns.length === 0 ? (
         <div className="card empty">
-          <div className="empty-icon">🔍</div>
           <h3>No recurring bills or income detected yet</h3>
           <p
             className="dim"
@@ -133,7 +131,6 @@ export default function CashFlow() {
               style={{ borderColor: 'var(--red)', background: 'rgba(242,114,114,0.06)' }}
             >
               <div className="row">
-                <span style={{ fontSize: 22 }}>⚠️</span>
                 <div>
                   <strong>Your balance is projected to go negative.</strong>{' '}
                   <span className="dim">

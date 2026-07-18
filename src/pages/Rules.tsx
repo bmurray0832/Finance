@@ -37,7 +37,7 @@ export default function Rules() {
           </div>
         </div>
         <button className="btn" onClick={() => actions.reapplyRules()}>
-          ↻ Re-apply to all
+          Re-apply to all
         </button>
       </div>
 
@@ -119,7 +119,7 @@ export default function Rules() {
                         actions.reapplyRules()
                       }}
                     >
-                      ✕
+                      ×
                     </button>
                   </td>
                 </tr>

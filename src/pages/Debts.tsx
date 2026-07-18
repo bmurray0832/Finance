@@ -50,7 +50,6 @@ export default function Debts() {
 
       {debts.length === 0 ? (
         <div className="card empty">
-          <div className="empty-icon">💳</div>
           <h3>No debts tracked</h3>
           <p className="dim" style={{ margin: '8px 0 20px' }}>
             Add your loans and credit cards to see which to attack first.
@@ -86,7 +85,6 @@ export default function Debts() {
               style={{ borderColor: 'var(--amber)', background: 'rgba(240,180,41,0.06)' }}
             >
               <div className="row">
-                <span style={{ fontSize: 22 }}>🔥</span>
                 <div>
                   <strong>Focus on {ranked[0].name} first.</strong>{' '}
                   <span className="dim">
@@ -140,7 +138,7 @@ export default function Debts() {
                               if (confirm(`Delete "${d.name}"?`)) actions.deleteDebt(d.id)
                             }}
                           >
-                            ✕
+                            ×
                           </button>
                         </div>
                       </td>
@@ -193,7 +191,7 @@ function DebtForm({ debt, onClose }: { debt: Debt | null; onClose: () => void })
         <div className="row-between mb-24">
           <h2>{debt ? 'Edit debt' : 'Add debt'}</h2>
           <button className="btn-ghost btn-sm" onClick={onClose}>
-            ✕
+            ×
           </button>
         </div>
 

@@ -32,7 +32,6 @@ export default function Goals() {
 
       {goals.length === 0 ? (
         <div className="card empty">
-          <div className="empty-icon">🎯</div>
           <h3>No goals yet</h3>
           <p className="dim" style={{ margin: '8px 0 20px' }}>
             Set a target — an emergency fund, a trip, a new laptop — and track your progress.
@@ -97,7 +96,7 @@ function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: () => void }) {
     <div className="card">
       <div className="row-between">
         <h3>{goal.name}</h3>
-        {complete && <span className="tag" style={{ background: 'rgba(53,192,127,0.15)', color: 'var(--green)', borderColor: 'rgba(53,192,127,0.3)' }}>Reached 🎉</span>}
+        {complete && <span className="tag" style={{ background: 'rgba(53,192,127,0.15)', color: 'var(--green)', borderColor: 'rgba(53,192,127,0.3)' }}>Reached</span>}
       </div>
       {goal.note && <p className="hint" style={{ marginTop: 4 }}>{goal.note}</p>}
 
@@ -176,7 +175,7 @@ function GoalForm({ goal, onClose }: { goal: Goal | null; onClose: () => void })
         <div className="row-between mb-24">
           <h2>{goal ? 'Edit goal' : 'Add goal'}</h2>
           <button className="btn-ghost btn-sm" onClick={onClose}>
-            ✕
+            ×
           </button>
         </div>
 

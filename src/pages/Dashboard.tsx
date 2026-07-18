@@ -66,7 +66,6 @@ export default function Dashboard() {
 
       {transactions.length === 0 ? (
         <div className="card empty">
-          <div className="empty-icon">📥</div>
           <h3>No transactions yet</h3>
           <p className="dim" style={{ maxWidth: 380, margin: '8px auto 20px' }}>
             Import a bank statement CSV to see a per-category breakdown of your spending. Your data
@@ -240,7 +239,7 @@ function CategoryDrillDown({
             </div>
           </div>
           <button className="btn-ghost btn-sm" onClick={onClose}>
-            ✕
+            ×
           </button>
         </div>
 

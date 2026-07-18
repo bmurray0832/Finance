@@ -68,14 +68,13 @@ export default function Settings() {
           }}
         >
           <div className="row">
-            <span style={{ fontSize: 18 }}>{msg.kind === 'ok' ? '✅' : '⚠️'}</span>
             <span>{msg.text}</span>
           </div>
         </div>
       )}
 
       <div className="card mb-24">
-        <div className="section-title">💾 Backup &amp; restore</div>
+        <div className="section-title">Backup &amp; restore</div>
         <p className="dim" style={{ marginTop: 0 }}>
           Your data lives only in this browser. Export a JSON backup to keep a safety copy or to
           load it into the app on another device or browser.
@@ -91,7 +90,7 @@ export default function Settings() {
               Download everything — transactions, debts, goals, rules, and saved column mappings.
             </p>
             <button className="btn-primary mt-8" onClick={exportBackup} disabled={isEmpty}>
-              ⬇ Export backup
+              Export backup
             </button>
             {isEmpty && <p className="hint">Nothing to export yet.</p>}
           </div>
@@ -105,7 +104,7 @@ export default function Settings() {
               Load a backup file. This replaces all current data in this browser.
             </p>
             <button className="btn mt-8" onClick={() => fileRef.current?.click()}>
-              ⬆ Restore from file
+              Restore from file
             </button>
             <input
               ref={fileRef}
@@ -144,7 +143,7 @@ export default function Settings() {
           </tbody>
         </table>
         <p className="hint">
-          🔒 This data is never uploaded. Clearing your browser storage removes it — keep a backup.
+          This data is never uploaded. Clearing your browser storage removes it — keep a backup.
         </p>
       </div>
     </div>
