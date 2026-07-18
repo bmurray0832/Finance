@@ -87,7 +87,10 @@ src/
     PeriodFilter.tsx  Month/Quarter/Year segmented toggle + period dropdown;
                       shared by Dashboard and Transactions.
   pages/
-    Dashboard.tsx     Stats + donut chart (recharts) + category table + period filter.
+    Dashboard.tsx     Stats + donut chart (recharts) + category table + period
+                      filter. Clicking a category (table row or pie slice) opens
+                      a CategoryDrillDown modal listing that category's money-out
+                      transactions within the selected period.
     Transactions.tsx  Search, period + category filters, inline category
                       override (incl. "New category…" to create one), delete, clear.
     Debts.tsx         Avalanche ranking, add/edit/delete, "focus first" banner.
@@ -135,7 +138,8 @@ sample-statement.csv  Demo data for trying the import flow.
 - CSV import with flexible mapping, guess-from-headers, remembered mappings,
   duplicate detection, single-amount and debit/credit modes.
 - Dashboard: income/expense/net/count stats, donut chart, category table with
-  share %, month/quarter/year filter.
+  share %, month/quarter/year filter, and click-to-drill-down (category row or
+  pie slice → modal of that category's transactions for the selected period).
 - Transactions: search, month/quarter/year filter, category filter, inline
   category override (with "New category…" to create a new one on the fly),
   a "Showing N of M" count + Clear filters, delete, clear.

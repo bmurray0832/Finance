@@ -12,7 +12,8 @@ uploaded to a server.**
 
 - **📊 Category breakdown** — import any bank's CSV and see spending grouped by
   category, with a donut chart, per-category totals, share of spend, and a
-  month/quarter/year filter.
+  month/quarter/year filter. Click any category (row or pie slice) to drill
+  into the transactions behind it for the selected period.
 - **🧾 Transactions** — search, filter by month/quarter/year, and override any
   transaction's category. Manual overrides are protected from
   re-categorization.
