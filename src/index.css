@@ -185,6 +185,9 @@ h3 {
 .neg {
   color: var(--red);
 }
+.warn {
+  color: var(--amber);
+}
 .dim {
   color: var(--text-dim);
 }
@@ -538,4 +541,13 @@ tr:last-child td {
 }
 .clickable-row:hover .drill-cue {
   opacity: 1;
+}
+
+/* Budget inputs ------------------------------------------------------ */
+.budget-input {
+  width: 120px;
+  text-align: right;
+  padding: 6px 10px;
+  margin-left: auto;
+  display: block;
 }

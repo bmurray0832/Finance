@@ -14,6 +14,7 @@ const EMPTY_STATE: AppState = {
   currentBalance: 0,
   currentBalanceUpdatedAt: null,
   dismissedRecurring: [],
+  budgets: {},
 }
 
 /**
@@ -37,6 +38,10 @@ function normalizeState(parsed: Partial<AppState> | null | undefined): AppState 
     currentBalanceUpdatedAt:
       typeof parsed.currentBalanceUpdatedAt === 'string' ? parsed.currentBalanceUpdatedAt : null,
     dismissedRecurring: Array.isArray(parsed.dismissedRecurring) ? parsed.dismissedRecurring : [],
+    budgets:
+      parsed.budgets && typeof parsed.budgets === 'object'
+        ? (parsed.budgets as Record<string, number>)
+        : {},
   }
 }
 
@@ -194,6 +199,20 @@ export const actions = {
           : [...prev.dismissedRecurring, key]
         : prev.dismissedRecurring.filter((k) => k !== key),
     }))
+  },
+
+  // Budgets --------------------------------------------------------------
+  /** Set (or clear, when amount <= 0 / NaN) a category's monthly budget. */
+  setBudget(category: string, amount: number) {
+    setState((prev) => {
+      const next = { ...prev.budgets }
+      if (!amount || amount <= 0 || isNaN(amount)) {
+        delete next[category]
+      } else {
+        next[category] = amount
+      }
+      return { ...prev, budgets: next }
+    })
   },
 }
 

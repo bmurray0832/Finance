@@ -118,3 +118,42 @@ const PALETTE = [
 export function colorFor(index: number): string {
   return PALETTE[index % PALETTE.length]
 }
+
+/** Number of distinct calendar months present in a set of transactions (min 1). */
+export function distinctMonthCount(txns: Transaction[]): number {
+  const set = new Set<string>()
+  for (const t of txns) {
+    if (t.date) set.add(t.date.slice(0, 7))
+  }
+  return Math.max(1, set.size)
+}
+
+export type BudgetLevel = 'under' | 'warn' | 'over'
+
+export interface BudgetStatus {
+  planned: number
+  actual: number
+  /** actual - planned; positive means over budget. */
+  delta: number
+  /** delta as a percent of planned (0 when no budget). */
+  pct: number
+  level: BudgetLevel
+}
+
+/**
+ * Compare actual spend against a planned budget and classify it into a
+ * stoplight level: under/on budget (green), slightly over ≤10% (amber),
+ * or well over >10% (red).
+ */
+export function budgetStatus(actual: number, planned: number): BudgetStatus {
+  const delta = actual - planned
+  const pct = planned > 0 ? (delta / planned) * 100 : 0
+  let level: BudgetLevel = 'under'
+  if (planned > 0 && delta > 0) level = pct <= 10 ? 'warn' : 'over'
+  return { planned, actual, delta, pct, level }
+}
+
+/** CSS class for a budget level's stoplight text color. */
+export function budgetLevelClass(level: BudgetLevel): string {
+  return level === 'over' ? 'neg' : level === 'warn' ? 'warn' : 'pos'
+}

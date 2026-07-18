@@ -22,6 +22,9 @@ uploaded to a server.**
   interest paid. Shows weighted APR and monthly interest cost.
 - **Savings goals** — set targets, log contributions, and watch progress
   bars fill up.
+- **Budgets** — set a monthly budget per category; the Dashboard shows planned
+  vs actual with stoplight colors (green at/under, amber up to 10% over, red
+  more than 10% over) and how far off you are.
 - **Cash flow** — auto-detects recurring bills and income from your
   transaction history (rent, subscriptions, paychecks — anything that repeats
   on a consistent schedule and amount) and projects them forward from your

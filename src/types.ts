@@ -67,4 +67,6 @@ export interface AppState {
   currentBalanceUpdatedAt: string | null
   /** Keys (from recurring.ts's detectRecurring) the user has hidden from the cash flow forecast. */
   dismissedRecurring: string[]
+  /** Per-category monthly spending budgets, keyed by category name. */
+  budgets: Record<string, number>
 }

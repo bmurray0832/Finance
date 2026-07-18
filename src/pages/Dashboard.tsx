@@ -7,9 +7,12 @@ import ImportModal from '../components/ImportModal'
 import PeriodFilter from '../components/PeriodFilter'
 import {
   availablePeriods,
+  budgetLevelClass,
+  budgetStatus,
   categoryBreakdown,
   colorFor,
   computeTotals,
+  distinctMonthCount,
   filterByPeriod,
   periodLabel,
   type PeriodType,
@@ -17,7 +20,7 @@ import {
 import { formatCurrency, formatDate, formatPercent } from '../lib/format'
 
 export default function Dashboard() {
-  const { transactions } = useStore()
+  const { transactions, budgets } = useStore()
   const [importing, setImporting] = useState(false)
   const [periodType, setPeriodType] = useState<PeriodType>('month')
   const [period, setPeriod] = useState('all')
@@ -30,6 +33,11 @@ export default function Dashboard() {
   )
   const totals = useMemo(() => computeTotals(filtered), [filtered])
   const breakdown = useMemo(() => categoryBreakdown(filtered), [filtered])
+
+  // Monthly budgets are scaled to the number of months visible in the current
+  // period, so planned-vs-actual stays apples-to-apples for month/quarter/year.
+  const budgetMonths = useMemo(() => distinctMonthCount(filtered), [filtered])
+  const hasBudgets = Object.keys(budgets).length > 0
 
   const pieData = breakdown.map((b, i) => ({
     name: b.category,
@@ -141,52 +149,104 @@ export default function Dashboard() {
             </div>
 
             <div className="card">
-              <div className="section-title">Category breakdown</div>
+              <div className="row-between">
+                <div className="section-title" style={{ marginBottom: 0 }}>
+                  Category breakdown
+                </div>
+                {hasBudgets && budgetMonths > 1 && (
+                  <span className="chip" title="Monthly budgets scaled to this period">
+                    Budget × {budgetMonths} months
+                  </span>
+                )}
+              </div>
               {breakdown.length === 0 ? (
-                <p className="dim">No expenses in this period.</p>
+                <p className="dim" style={{ marginTop: 14 }}>No expenses in this period.</p>
               ) : (
-                <table>
+                <table style={{ marginTop: 14 }}>
                   <thead>
                     <tr>
                       <th>Category</th>
                       <th className="num">Spent</th>
-                      <th className="num">Share</th>
-                      <th className="num">#</th>
+                      {hasBudgets ? (
+                        <>
+                          <th className="num">Budget</th>
+                          <th className="num">vs budget</th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="num">Share</th>
+                          <th className="num">#</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
-                    {breakdown.map((b, i) => (
-                      <tr
-                        key={b.category}
-                        className="clickable-row"
-                        onClick={() => setDrillCategory(b.category)}
-                        title={`View ${b.category} transactions`}
-                      >
-                        <td>
-                          <span className="row">
-                            <span
-                              className="legend-dot"
-                              style={{ background: colorFor(i) }}
-                            />
-                            {b.category}
-                            <span className="drill-cue" aria-hidden>
-                              ›
+                    {breakdown.map((b, i) => {
+                      const planned = (budgets[b.category] ?? 0) * budgetMonths
+                      const status = budgetStatus(b.total, planned)
+                      return (
+                        <tr
+                          key={b.category}
+                          className="clickable-row"
+                          onClick={() => setDrillCategory(b.category)}
+                          title={`View ${b.category} transactions`}
+                        >
+                          <td>
+                            <span className="row">
+                              <span
+                                className="legend-dot"
+                                style={{ background: colorFor(i) }}
+                              />
+                              {b.category}
+                              <span className="drill-cue" aria-hidden>
+                                ›
+                              </span>
                             </span>
-                          </span>
-                        </td>
-                        <td className="num">{formatCurrency(b.total)}</td>
-                        <td className="num dim">{formatPercent(b.share)}</td>
-                        <td className="num dim">{b.count}</td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="num">{formatCurrency(b.total)}</td>
+                          {hasBudgets ? (
+                            <>
+                              <td className="num dim">
+                                {planned > 0 ? formatCurrency(planned) : '—'}
+                              </td>
+                              <td className="num">
+                                {planned > 0 ? (
+                                  <span className={budgetLevelClass(status.level)}>
+                                    {status.delta > 0 ? '+' : ''}
+                                    {formatCurrency(status.delta)}{' '}
+                                    <span style={{ fontSize: 12 }}>
+                                      ({formatPercent(Math.abs(status.pct), 0)}{' '}
+                                      {status.delta > 0 ? 'over' : 'left'})
+                                    </span>
+                                  </span>
+                                ) : (
+                                  <span className="dim">—</span>
+                                )}
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="num dim">{formatPercent(b.share)}</td>
+                              <td className="num dim">{b.count}</td>
+                            </>
+                          )}
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               )}
               <div className="hint mt-8">
                 Click a category to see its transactions ·{' '}
-                <Link to="/transactions" style={{ color: 'var(--accent)' }}>
-                  Edit transactions →
-                </Link>
+                {hasBudgets ? (
+                  <Link to="/budgets" style={{ color: 'var(--accent)' }}>
+                    Manage budgets →
+                  </Link>
+                ) : (
+                  <Link to="/budgets" style={{ color: 'var(--accent)' }}>
+                    Set category budgets →
+                  </Link>
+                )}
               </div>
             </div>
           </div>

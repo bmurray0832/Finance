@@ -98,6 +98,8 @@ src/
     CashFlow.tsx      Current balance (manual, edited via prompt()), safe-to-spend
                       + lowest-balance stats, upcoming events table, detected
                       recurring bills/income with dismiss/restore.
+    Budgets.tsx       Set a monthly budget per category; shows each category's
+                      spend for the latest month with a stoplight delta.
     Rules.tsx         Manage keyword rules; re-apply to all.
     Settings.tsx      JSON export/import (backup & restore) + data summary.
 sample-statement.csv  Demo data for trying the import flow.
@@ -140,6 +142,14 @@ sample-statement.csv  Demo data for trying the import flow.
 - Dashboard: income/expense/net/count stats, donut chart, category table with
   share %, month/quarter/year filter, and click-to-drill-down (category row or
   pie slice → modal of that category's transactions for the selected period).
+  When budgets are set, the breakdown swaps its Share/# columns for
+  Budget/vs-budget with stoplight-colored deltas.
+- Budgets: `src/pages/Budgets.tsx` (route `/budgets`) sets a monthly budget per
+  category; the Dashboard reflects planned-vs-actual with stoplight colors
+  (green at/under, amber ≤10% over, red >10% over), scaling monthly budgets to
+  the number of months in the selected period. Persisted as
+  `budgets: Record<category, number>` in the store (additive, defaulted by
+  `normalizeState`, included in JSON backups). No emoji anywhere in the UI.
 - Transactions: search, month/quarter/year filter, category filter, inline
   category override (with "New category…" to create a new one on the fly),
   a "Showing N of M" count + Clear filters, delete, clear.
@@ -213,7 +223,12 @@ sample-statement.csv  Demo data for trying the import flow.
 ## Suggested backlog (roughly prioritized)
 
 1. **Monthly trend chart** on the Dashboard (spend over time).
-2. **Budgets per category** with over/under indicators.
+2. _(done)_ ~~Budgets per category with over/under indicators.~~ Shipped:
+   `src/pages/Budgets.tsx` + `budgets: Record<string, number>` in the store +
+   `budgetStatus`/`budgetLevelClass`/`distinctMonthCount` in analytics.ts.
+   Dashboard breakdown shows planned-vs-actual with stoplight colors (green =
+   at/under, amber = ≤10% over, red = >10% over), monthly budgets scaled by the
+   number of months in the selected period.
 3. **Bulk re-categorize** from the Transactions view (e.g. "create a rule from
    this merchant").
 4. **Tests** — unit tests for `csv.ts` parsing/mapping,
