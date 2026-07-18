@@ -5,23 +5,30 @@ import PeriodFilter from '../components/PeriodFilter'
 import { formatCurrency, formatDate } from '../lib/format'
 import { availablePeriods, filterByPeriod, type PeriodType } from '../lib/analytics'
 
+/** Sentinel value for the "add a new category" option in the inline selector. */
+const NEW_CATEGORY = '__new_category__'
+
 export default function Transactions() {
   const { transactions } = useStore()
   const [importing, setImporting] = useState(false)
   const [periodType, setPeriodType] = useState<PeriodType>('month')
   const [period, setPeriod] = useState('all')
   const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
 
   const periods = useMemo(() => availablePeriods(transactions, periodType), [transactions, periodType])
 
   const categories = useMemo(() => {
     const set = new Set<string>()
     transactions.forEach((t) => set.add(t.category))
-    return Array.from(set).sort()
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
   }, [transactions])
 
   const rows = useMemo(() => {
     let r = filterByPeriod(transactions, periodType, period)
+    if (categoryFilter !== 'all') {
+      r = r.filter((t) => t.category === categoryFilter)
+    }
     if (search.trim()) {
       const q = search.toLowerCase()
       r = r.filter(
@@ -30,7 +37,17 @@ export default function Transactions() {
       )
     }
     return [...r].sort((a, b) => (a.date < b.date ? 1 : -1))
-  }, [transactions, periodType, period, search])
+  }, [transactions, periodType, period, search, categoryFilter])
+
+  /** Assign a category to a transaction, prompting for a name when "New category…" is picked. */
+  function handleCategoryChange(id: string, value: string) {
+    if (value === NEW_CATEGORY) {
+      const name = prompt('New category name:')?.trim()
+      if (name) actions.updateTransactionCategory(id, name)
+      return
+    }
+    actions.updateTransactionCategory(id, value)
+  }
 
   return (
     <div>
@@ -72,12 +89,27 @@ export default function Transactions() {
       ) : (
         <div className="card">
           <div className="row-between mb-24 gap-wrap">
-            <input
-              placeholder="Search description or category…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ maxWidth: 320 }}
-            />
+            <div className="row gap-wrap">
+              <input
+                placeholder="Search description or category…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ maxWidth: 280 }}
+              />
+              <select
+                className="inline-select"
+                value={categories.includes(categoryFilter) ? categoryFilter : 'all'}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                title="Filter by category"
+              >
+                <option value="all">All categories</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
             <PeriodFilter
               type={periodType}
               period={period}
@@ -87,6 +119,24 @@ export default function Transactions() {
                 setPeriod(p)
               }}
             />
+          </div>
+
+          <div className="row-between mb-24 gap-wrap">
+            <span className="dim" style={{ fontSize: 13 }}>
+              Showing {rows.length} of {transactions.length}
+            </span>
+            {(categoryFilter !== 'all' || period !== 'all' || search.trim()) && (
+              <button
+                className="btn-ghost btn-sm"
+                onClick={() => {
+                  setCategoryFilter('all')
+                  setPeriod('all')
+                  setSearch('')
+                }}
+              >
+                Clear filters
+              </button>
+            )}
           </div>
 
           <div style={{ overflowX: 'auto' }}>
@@ -111,7 +161,7 @@ export default function Transactions() {
                       <select
                         className="inline-select"
                         value={t.category}
-                        onChange={(e) => actions.updateTransactionCategory(t.id, e.target.value)}
+                        onChange={(e) => handleCategoryChange(t.id, e.target.value)}
                       >
                         {[...new Set([t.category, ...categories])].map((c) => (
                           <option key={c} value={c}>
@@ -119,6 +169,8 @@ export default function Transactions() {
                             {t.categoryLocked && c === t.category ? ' •' : ''}
                           </option>
                         ))}
+                        <option disabled>──────────</option>
+                        <option value={NEW_CATEGORY}>➕ New category…</option>
                       </select>
                     </td>
                     <td className={'num ' + (t.amount < 0 ? 'neg' : 'pos')}>
